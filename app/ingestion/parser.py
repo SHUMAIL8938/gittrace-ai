@@ -15,14 +15,30 @@ LANGUAGE_MAP = {
     ".c": "c",
 }
 NODE_TYPES = {
-    "python": ["function_definition", "class_definition"],
-    "javascript": ["function_declaration", "class_declaration"],
-    "typescript": ["function_declaration", "class_declaration"],
-    "go": ["function_declaration", "type_declaration"],
-    "rust": ["function_definition", "struct_definition"],
-    "java": ["method_declaration", "class_declaration"],
-    "cpp": ["function_definition", "class_declaration"],
-    "c": ["function_definition", "struct_definition"],
+    "python": {
+        "function_definition": "function",
+        "class_definition": "class",
+    },
+    "javascript": {
+        "function_declaration": "function",
+        "class_declaration": "class",
+    },
+    "typescript": {
+        "function_declaration": "function",
+        "class_declaration": "class",
+    },
+    "go": {
+        "function_declaration": "function",
+        "type_declaration": "class",
+    },
+    "rust": {
+        "function_definition": "function",
+        "struct_definition": "class",
+    },
+    "java": {
+        "method_declaration": "function",
+        "class_declaration": "class",
+    },
 }
 
 
