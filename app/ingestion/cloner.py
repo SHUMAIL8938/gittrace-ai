@@ -1,5 +1,6 @@
 import os
 import tempfile
+import shutil
 import git  
 
 
@@ -27,3 +28,5 @@ def clone_repo(github_url:str)-> tuple[str,list[str]]:
             full_path=os.path.join(root,filename)
             file_paths.append(full_path)
     return repo_dir,file_paths
+def cleanup_repo(repo_dir:str):
+    shutil.rmtree(repo_dir,ignore_errors=True)
