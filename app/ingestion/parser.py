@@ -57,8 +57,9 @@ def extract_chunks_from_ast(
         return chunks
 
     def walk(node):
-        valid_types = NODE_TYPES.get(language, [])
+        valid_types = NODE_TYPES.get(language, {})
         if node.type in valid_types:
+            chunk_type = valid_types[node.type]
             text = source_bytes[node.start_byte : node.end_byte].decode(
                 "utf-8", errors="ignore"
             )
@@ -74,9 +75,7 @@ def extract_chunks_from_ast(
                     language=language,
                     start_line=node.start_point[0] + 1,
                     end_line=node.end_point[0] + 1,
-                    chunk_type="function"
-                    if node.type == "function_definition"
-                    else "class",
+                    chunk_type=chunk_type,
                     name=name,
                     repo_name=repo_name,
                 )

@@ -7,7 +7,7 @@ import git
 IGNORE_DIRS = {
     ".git",".github", "node_modules", "__pycache__", ".venv", "venv",
     "dist", "build", ".next", ".nuxt", "target", "vendor",
-    ".idea", ".vscode", "eggs", ".eggs",".docs","site","venv"
+    ".idea", ".vscode", "eggs", ".eggs",".docs","site","venv","test","tests"
 }
 ALLOWED_EXTENSIONS = {
     ".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".go",
