@@ -1,0 +1,14 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.pyc
+*.egg-info
+chroma_db/
+tmp*/
+.env
+# Virtual environments
+.venv
+Thumbs.db
