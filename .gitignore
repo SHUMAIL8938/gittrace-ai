@@ -12,3 +12,5 @@ tmp*/
 # Virtual environments
 .venv
 Thumbs.db
+chunks_cache.json
+chunks_cache.json.gz
