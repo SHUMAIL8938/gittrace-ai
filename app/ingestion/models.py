@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 @dataclass
