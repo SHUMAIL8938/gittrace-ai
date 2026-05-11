@@ -78,3 +78,39 @@ def store_chunks(
             logger.info("stored batch %d-%d",i,i+len(batch_ids))
         
     logger.info("stored %d chunks into collection '%s'",len(chunks),collection_name)
+
+def search(
+        query_embedding:list[float],
+        repo_name:str,
+        n_results:int=10,
+        filter_language: str|None=None,
+)->list[dict]:
+    client=_get_client()
+    collection_name=_sanitize_name(repo_name)
+
+    try:
+        collection=client.get_collection(collection_name)
+    except Exception:
+        raise VectorStoreError( f"collection'{collection_name}' not found. check if repo indexed properly or not")
+    
+    where={"language": filter_language} if filter_language else None
+
+    results=collection.query(
+        query_embeddings=[query_embedding],
+        n_results=n_results,
+        where=where,
+        include=["documents","metadatas","distances"],
+    )
+    
+    hits=[]
+    for doc, meta, dist in zip(
+        results["documents"][0],
+        results["metadatas"][0],
+        results["distances"][0],
+    ):
+        hits.append({
+            "text":doc,
+            "metadata":meta,
+            "score":max(0.0,round(1-dist,4))
+        })
+    return hits
