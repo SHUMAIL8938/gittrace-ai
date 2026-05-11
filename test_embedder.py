@@ -49,9 +49,8 @@ def get_chunks():
 
 chunks = get_chunks()
 
-sample = chunks[:100]
 
-embeddings = embed_chunks(sample)
+embeddings = embed_chunks(chunks)
 
 print(f"Chunks embedded: {len(embeddings)}")
 print(f"Vector size: {len(embeddings[0])}")

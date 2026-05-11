@@ -27,25 +27,33 @@ def _make_chunk_id(chunk: Chunk) -> str:
     return hashlib.md5(raw.encode()).hexdigest()
 
 def store_chunks(
-        chunks:list[Chunk],
-        embeddings:list[list[float]],
-        repo_name:str,
-)->None:
+        chunks: list[Chunk],
+        embeddings: list[list[float]],
+        repo_name: str,
+        overwrite: bool = True,
+) -> None:
     if not chunks:
         logger.warning("store_chunks called with empty list")
         return
-    if len(chunks)!=len(embeddings):
+    if len(chunks) != len(embeddings):
         raise VectorStoreError(
-            f"chunks and embeddings length mismatch:{len(chunks)} vs {len(embeddings)}"
+            f"Chunks and embeddings length mismatch: {len(chunks)} vs {len(embeddings)}"
         )
-    client=_get_client()
-    collection_name =_sanitize_name(repo_name)
 
-    collection=client.get_or_create_collection(
+    client = _get_client()
+    collection_name = _sanitize_name(repo_name)
+
+    if overwrite:
+        try:
+            client.delete_collection(collection_name)
+            logger.info("Deleted existing collection '%s'", collection_name)
+        except Exception:
+            pass
+
+    collection = client.get_or_create_collection(
         name=collection_name,
-        metadata={"hnsw:space":"cosine"},
+        metadata={"hnsw:space": "cosine"},
     )
-
     ids,texts,metadatas=[],[],[]
 
     for chunk, embedding in zip(chunks,embeddings):
