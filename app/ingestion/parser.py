@@ -55,7 +55,7 @@ def _relative_path(file_path: str, repo_dir: str) -> str:
     if not repo_dir:
         return file_path
     try:
-        return str(Path(file_path).relative_to(repo_dir))
+        return Path(file_path).relative_to(repo_dir).as_posix()
     except ValueError:
         return file_path
 

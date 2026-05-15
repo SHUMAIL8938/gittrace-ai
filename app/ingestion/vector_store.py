@@ -1,23 +1,45 @@
 import logging
+import os
 import re
 import chromadb
 from chromadb.config import Settings
 from app.ingestion.models import Chunk
 import hashlib
+from app.config import (
+    CHROMA_API_KEY,
+    CHROMA_TENANT,
+    CHROMA_DATABASE,
+    CHROMA_LOCAL_PATH,
+)
 
 logger=logging.getLogger(__name__)
 
-CHROMA_PATH="chroma_db"
 MAX_BATCH_SIZE=500
 
 class VectorStoreError(Exception):
     """Raised when vector storing fails"""
+    
+def _get_client() -> chromadb.ClientAPI:
+    """
+    Returns ChromaDB client.
+    Uses cloud client if CHROMA_API_KEY is set, otherwise local persistent client.
+    This allows same code to work locally and in production.
+    """
 
-def _get_client()->chromadb.PersistentClient:
+    if CHROMA_API_KEY and CHROMA_TENANT and CHROMA_DATABASE:
+        return chromadb.HttpClient(
+            host="api.trychroma.com",
+            ssl=True,
+            tenant=CHROMA_TENANT,
+            database=CHROMA_DATABASE,
+            headers={"x-chroma-token": CHROMA_API_KEY},
+        )
+
     return chromadb.PersistentClient(
-        path=CHROMA_PATH,
+        path=CHROMA_LOCAL_PATH,
         settings=Settings(anonymized_telemetry=False),
     )
+
 def _sanitize_name(name:str)->str:
     sanitized=re.sub(r"[^a-zA-Z0-9-]","-",name)
     return sanitized[:63]
@@ -122,3 +144,49 @@ def search(
             "score":max(0.0,round(1-dist,4))
         })
     return hits
+
+def get_all_chunks(repo_name: str) -> list[dict]:
+    """
+    Fetch all stored chunks from ChromaDB.
+    Used to rebuild BM25 index on server startup without re-cloning.
+    """
+    client = _get_client()
+    collection_name = _sanitize_name(repo_name)
+
+    try:
+        collection = client.get_collection(collection_name)
+    except Exception:
+        raise VectorStoreError(
+            f"Collection '{collection_name}' not found."
+        )
+
+    result = collection.get(include=["documents", "metadatas"])
+
+    chunks = []
+    for doc, meta in zip(result["documents"], result["metadatas"]):
+        chunks.append({
+            "text": doc,
+            "metadata": meta,
+        })
+
+    logger.info(
+        "Fetched %d chunks from collection '%s'",
+        len(chunks),
+        collection_name,
+    )
+
+    return chunks
+
+
+def list_indexed_repos() -> list[str]:
+    """
+    Return sanitized names of all indexed repositories.
+    Used by frontend to show which repos are available to query.
+    """
+    client = _get_client()
+    try:
+        collections = client.list_collections()
+        return [c.name for c in collections]
+    except Exception as e:
+        logger.error("Failed to list collections: %s", e)
+        return []
