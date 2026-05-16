@@ -18,15 +18,13 @@ MAX_BATCH_SIZE=500
 
 class VectorStoreError(Exception):
     """Raised when vector storing fails"""
-    
-def _get_client() -> chromadb.ClientAPI:
-    """
-    Returns ChromaDB client.
-    Uses cloud client if CHROMA_API_KEY is set, otherwise local persistent client.
-    This allows same code to work locally and in production.
-    """
 
-    if CHROMA_API_KEY and CHROMA_TENANT and CHROMA_DATABASE:
+def _create_chroma_client() -> chromadb.ClientAPI:
+    """
+    Creates a new ChromaDB client.
+    Uses cloud if CHROMA_API_KEY is set, local otherwise.
+    """
+    if CHROMA_API_KEY:
         return chromadb.HttpClient(
             host="api.trychroma.com",
             ssl=True,
@@ -34,11 +32,13 @@ def _get_client() -> chromadb.ClientAPI:
             database=CHROMA_DATABASE,
             headers={"x-chroma-token": CHROMA_API_KEY},
         )
-
     return chromadb.PersistentClient(
         path=CHROMA_LOCAL_PATH,
         settings=Settings(anonymized_telemetry=False),
     )
+  
+def _get_client() -> chromadb.ClientAPI:
+    return _create_chroma_client()
 
 def _sanitize_name(name:str)->str:
     sanitized=re.sub(r"[^a-zA-Z0-9-]","-",name)
