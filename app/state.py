@@ -12,6 +12,7 @@ from app.ingestion.vector_store import (
 
 logger = logging.getLogger(__name__)
 
+
 class JobStatus:
     PENDING = "pending"
     CLONING = "cloning"
@@ -20,6 +21,7 @@ class JobStatus:
     STORING = "storing"
     READY = "ready"
     FAILED = "failed"
+
 
 class AppState:
     def __init__(self) -> None:
@@ -75,7 +77,34 @@ class AppState:
             )
             for c in raw_chunks
         ]
-        self.bm25_indexes[repo_name]=BM25Index(chunks)
-        logger.info(
-            "BM25 ready for '%s' - chunks",repo_name,len(chunks)
-        )
+        self.bm25_indexes[repo_name] = BM25Index(chunks)
+        logger.info("BM25 ready for '%s' - chunks", repo_name, len(chunks))
+
+    def check_repo_status(
+        self,
+        repo_name: str,
+    ) -> dict:
+
+        indexed_repos = list_indexed_repos()
+
+        if repo_name in indexed_repos:
+            return {
+                "should_index": False,
+                "reason": "already indexed",
+                "job_id": None,
+            }
+
+        if repo_name in self.indexing_repos:
+            for job_id, job in self.job.items():
+                if job["repo_name"] == repo_name:
+                    return {
+                        "should_index": False,
+                        "reason": "in_progress",
+                        "job_id": job_id,
+                    }
+
+        return {
+            "should_index": False,
+            "reason": "in_progress",
+            "job_id": job_id,
+        }
